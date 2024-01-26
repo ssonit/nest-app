@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  dev-database:
+    image: postgres:latest
+    container_name: dev-database
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: db
+    networks:
+      - nestjs-network
+
+  # test-database:
+  #   image: postgres:latest
+  #   container_name: test-database
+  #   ports:
+  #     - 5435:5432
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: 123456
+  #     POSTGRES_DB: db
+  #   networks:
+  #     - nestjs-network
+networks:
+  nestjs-network:
+# docker compose up -d
+
+# Chỉ chạy duy nhất container
+# docker compose up -d dev-database -d
+
+# docker compose rm dev-database --stop --force --volumes
