@@ -11,17 +11,18 @@ datasource db {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
-  email       String   @unique
-  password    String
-  username    String
-  avatar      String?
-  cover_photo String?
-  bio         String?
-  location    String?
-  website     String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id                  Int      @id @default(autoincrement())
+  email               String   @unique
+  password            String
+  username            String
+  avatar              String?  @default("")
+  cover_photo         String?  @default("")
+  bio                 String?  @default("")
+  location            String?  @default("")
+  website             String?  @default("")
+  forgot_verify_token String?  @default("")
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
 
   @@map("users")
 }
@@ -29,11 +30,24 @@ model User {
 model RefreshToken {
   id         Int      @id @default(autoincrement())
   token      String   @unique
-  user       Int      
-  iat        BigInt?  
-  exp        BigInt?  
+  user       Int
+  iat        BigInt?
+  exp        BigInt?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@map("refresh_tokens")
+}
+
+model Media {
+  id         Int      @id @default(autoincrement())
+  name       String
+  file_name  String
+  mime_type  String
+  size       Int
+  key        String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("medias")
 }

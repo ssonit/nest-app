@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
-import { AuthLoginDto, AuthRegisterDto } from './dto/auth.dto'
+import { AuthLoginDto, AuthRegisterDto, ResetPasswordDto } from './dto'
 import { PrismaService } from 'src/prisma/prisma.service'
 import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt'
@@ -44,6 +44,19 @@ export class AuthService {
       )
     ])
     return { access_token, refresh_token }
+  }
+
+  async generateForgotPasswordToken({ id, email }) {
+    return this.jwtService.signAsync(
+      {
+        sub: id,
+        email
+      },
+      {
+        secret: this.configService.get('JWT_SECRET_FORGOT_PASSWORD_TOKEN'),
+        expiresIn: '1h'
+      }
+    )
   }
 
   async register(payload: AuthRegisterDto) {
@@ -172,5 +185,42 @@ export class AuthService {
     } catch (error) {
       return error
     }
+  }
+
+  async forgotPassword(email: string) {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          email
+        }
+      })
+
+      if (!user) {
+        throw new NotFoundException('Email not found')
+      }
+
+      const forgot_verify_token = await this.generateForgotPasswordToken({ id: user.id, email })
+
+      console.log('Gửi email cho user', forgot_verify_token)
+
+      await this.prismaService.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          forgot_verify_token
+        }
+      })
+    } catch (error) {
+      return error
+    }
+  }
+
+  async verifyForgotPassword(forgot_verify_token: string) {
+    return forgot_verify_token
+  }
+
+  async resetPassword(body: ResetPasswordDto) {
+    return body
   }
 }
