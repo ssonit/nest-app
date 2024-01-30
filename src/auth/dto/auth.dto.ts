@@ -27,7 +27,7 @@ export class AuthLoginDto {
 export class ResetPasswordDto {
   @IsString()
   @IsNotEmpty()
-  forgot_password_token: string
+  forgot_verify_token: string
 
   @IsString()
   @IsNotEmpty()

@@ -41,14 +41,22 @@ export class AuthController {
   }
 
   @Post('verify-forgot-password')
+  @UseGuards(AuthGuard('jwt-forgot-password'))
   @HttpCode(HttpStatus.OK)
-  verifyForgotPassword(@Body('forgot_verify_token') forgot_verify_token: string) {
-    return this.authService.verifyForgotPassword(forgot_verify_token)
+  verifyForgotPassword(@GetUser() user: any) {
+    return this.authService.verifyForgotPassword({
+      forgot_verify_token: user.forgot_verify_token,
+      user_id: user.sub
+    })
   }
 
   @Post('reset-password')
+  @UseGuards(AuthGuard('jwt-forgot-password'))
   @HttpCode(HttpStatus.OK)
-  resetPassword(@Body() body: ResetPasswordDto) {
-    return this.authService.resetPassword(body)
+  resetPassword(@GetUser() user: any, @Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword({
+      body,
+      user_id: user.sub
+    })
   }
 }

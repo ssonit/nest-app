@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 import { AuthLoginDto, AuthRegisterDto, ResetPasswordDto } from './dto'
 import { PrismaService } from 'src/prisma/prisma.service'
 import * as bcrypt from 'bcrypt'
@@ -211,16 +211,52 @@ export class AuthService {
           forgot_verify_token
         }
       })
+      return {
+        message: 'Check email to reset password'
+      }
     } catch (error) {
       return error
     }
   }
 
-  async verifyForgotPassword(forgot_verify_token: string) {
-    return forgot_verify_token
+  async verifyForgotPassword({ forgot_verify_token, user_id }: { forgot_verify_token: string; user_id: number }) {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          id: user_id
+        }
+      })
+      if (!user) throw new NotFoundException('User not found')
+
+      const token_valid = forgot_verify_token === user.forgot_verify_token
+
+      if (!token_valid) throw new UnauthorizedException('Token not valid')
+
+      return {
+        message: 'Verify forgot token successfully'
+      }
+    } catch (error) {
+      return error
+    }
   }
 
-  async resetPassword(body: ResetPasswordDto) {
-    return body
+  async resetPassword({ body, user_id }: { body: ResetPasswordDto; user_id: number }) {
+    try {
+      await this.prismaService.user.update({
+        where: {
+          id: user_id
+        },
+        data: {
+          password: this.hashData(body.password),
+          forgot_verify_token: ''
+        }
+      })
+
+      return {
+        message: 'Reset password successfully'
+      }
+    } catch (error) {
+      return error
+    }
   }
 }
