@@ -2,18 +2,25 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs
 import { AuthService } from './auth.service'
 import { AuthGuard } from '@nestjs/passport'
 import { GetUser } from './decorator'
-import { AuthLoginDto, AuthRegisterDto, ResetPasswordDto } from './dto'
+import { AuthLoginDto, AuthRegisterDto, RefreshTokenDto, ResetPasswordDto } from './dto'
+import { ApiResponse, ApiTags } from '@nestjs/swagger'
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiResponse({ status: 201, description: 'Register successfully' })
+  @ApiResponse({ status: 403, description: 'Email already exists' })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   register(@Body() body: AuthRegisterDto) {
     return this.authService.register(body)
   }
 
+  @ApiResponse({ status: 200, description: 'Login successfully' })
+  @ApiResponse({ status: 404, description: 'Email not found' })
+  @ApiResponse({ status: 403, description: 'Email or password incorrect' })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   login(@Body() body: AuthLoginDto) {
@@ -21,10 +28,9 @@ export class AuthController {
   }
 
   @Post('refresh-token')
-  @UseGuards(AuthGuard('jwt-refresh'))
   @HttpCode(HttpStatus.OK)
-  refreshToken(@GetUser() user: any) {
-    return this.authService.refreshToken(user, user.refresh_token)
+  refreshToken(@Body() body: RefreshTokenDto) {
+    return this.authService.refreshToken(body)
   }
 
   @Post('logout')

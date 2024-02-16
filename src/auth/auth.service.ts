@@ -1,10 +1,9 @@
 import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
-import { AuthLoginDto, AuthRegisterDto, ResetPasswordDto } from './dto'
+import { AuthLoginDto, AuthRegisterDto, JwtRefreshPayloadDto, RefreshTokenDto, ResetPasswordDto } from './dto'
 import { PrismaService } from 'src/prisma/prisma.service'
 import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
-import { TJwtPayload } from './types'
 
 @Injectable()
 export class AuthService {
@@ -142,10 +141,14 @@ export class AuthService {
     }
   }
 
-  async refreshToken(payload: TJwtPayload, refresh_token: string) {
+  async refreshToken({ refresh_token }: RefreshTokenDto) {
     try {
+      const { sub, email } = (await this.jwtService.verifyAsync(refresh_token, {
+        secret: this.configService.get('REFRESH_JWT_SECRET')
+      })) as JwtRefreshPayloadDto
+
       const [{ access_token: new_access_token, refresh_token: new_refresh_token }] = await Promise.all([
-        this.generateToken({ id: payload.sub, email: payload.email }),
+        this.generateToken({ id: sub, email: email }),
         this.prismaService.refreshToken.delete({
           where: {
             token: refresh_token
@@ -155,7 +158,7 @@ export class AuthService {
 
       await this.prismaService.refreshToken.create({
         data: {
-          user: payload.sub,
+          user: sub,
           token: new_refresh_token
         }
       })
